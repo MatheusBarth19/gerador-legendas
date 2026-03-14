@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Gerador de Legendas PRO</title>
+
+<style>
+
+body{
+font-family:'Segoe UI', Arial;
+background:url("https://images.unsplash.com/photo-1517816743773-6e0fd518b4a6");
+background-size:cover;
+background-position:center;
+background-attachment:fixed;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+margin:0;
+}
+
+/* overlay escuro */
+body::before{
+content:"";
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.45);
+backdrop-filter: blur(2px);
+z-index:0;
+}
+
+.card{
+position:relative;
+z-index:1;
+width:390px;
+padding:35px;
+background:rgba(255,255,255,0.15);
+backdrop-filter: blur(18px);
+-webkit-backdrop-filter: blur(18px);
+border-radius:24px;
+border:1px solid rgba(255,255,255,0.25);
+box-shadow:0 20px 60px rgba(0,0,0,0.4);
+color:#ffffff;
+text-shadow:0 1px 2px rgba(0,0,0,0.6);
+animation:subir .6s ease;
+}
+
+@keyframes subir{
+from{transform:translateY(30px);opacity:0}
+to{transform:translateY(0);opacity:1}
+}
+
+h2{
+text-align:center;
+margin-bottom:20px;
+font-weight:600;
+}
+
+input, select{
+width:100%;
+padding:14px;
+border-radius:14px;
+border:none;
+margin-top:12px;
+font-size:15px;
+background:rgba(0,0,0,0.35);
+color:#ffffff;
+outline:none;
+}
+
+input::placeholder{
+color:rgba(255,255,255,0.7);
+}
+
+button{
+width:100%;
+padding:14px;
+margin-top:18px;
+border:none;
+border-radius:16px;
+background:linear-gradient(135deg,#00c6ff,#0072ff);
+color:white;
+font-size:16px;
+font-weight:600;
+cursor:pointer;
+transition:.3s;
+}
+
+button:hover{
+transform:translateY(-3px);
+box-shadow:0 12px 25px rgba(0,0,0,0.4);
+}
+
+.copy{
+background:linear-gradient(135deg,#00ff87,#60efff);
+}
+
+#resultado{
+margin-top:22px;
+background:rgba(0,0,0,0.35);
+color:#ffffff;
+padding:18px;
+border-radius:16px;
+min-height:110px;
+font-size:14.5px;
+line-height:1.5;
+}
+
+.loader{
+margin-top:20px;
+text-align:center;
+display:none;
+}
+
+.spinner{
+width:30px;
+height:30px;
+border:4px solid rgba(255,255,255,0.3);
+border-top:4px solid white;
+border-radius:50%;
+animation:girar 1s linear infinite;
+margin:auto;
+}
+
+@keyframes girar{
+to{transform:rotate(360deg)}
+}
+
+.footer{
+margin-top:15px;
+font-size:11px;
+text-align:center;
+opacity:.7;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+<h2>Gerador de Legendas</h2>
+
+<input id="tema" placeholder="Digite o tema">
+
+<select id="tipo">
+<option value="motivacional">Motivacional</option>
+<option value="vendas">Vendas</option>
+<option value="fitness">Fitness</option>
+<option value="humor">Humor</option>
+<option value="empresarial">Empresarial</option>
+<option value="marketing">Marketing</option>
+<option value="estudos">Estudos</option>
+<option value="financas">Finanças</option>
+<option value="produtividade">Produtividade</option>
+<option value="desenvolvimento">Desenvolvimento pessoal</option>
+</select>
+
+<button onclick="gerar()">Gerar legendas</button>
+
+<div class="loader" id="loader">
+<div class="spinner"></div>
+</div>
+
+<div id="resultado"></div>
+
+<button class="copy" onclick="copiar()">Copiar legendas</button>
+
+<div class="footer">Ferramenta experimental</div>
+
+</div>
+
+<script>
+
+let legendasGeradas=[]
+let historico={}
+
+const banco={
+motivacional:[
+"Persistir em {tema} hoje cria orgulho amanhã.",
+"Crescimento em {tema} acontece fora da zona de conforto.",
+"Sua força em {tema} é maior do que imagina.",
+"O progresso em {tema} começa com coragem.",
+"Metas claras em {tema} facilitam a vitória.",
+"A disciplina em {tema} transforma sonhos em realidade.",
+"A dedicação em {tema} constrói um futuro melhor.",
+"A evolução em {tema} depende da sua atitude.",
+"A confiança em {tema} abre novas oportunidades.",
+"O esforço constante em {tema} gera conquistas reais.",
+"Cada passo em {tema} aproxima seu objetivo.",
+"O foco em {tema} fortalece sua mentalidade.",
+"A persistência em {tema} vence qualquer desafio.",
+"Acredite no seu potencial em {tema} todos os dias.",
+"O sucesso em {tema} nasce da constância."
+],
+
+vendas:[
+"Resultados em {tema} dependem de atitude.",
+"Estratégias em {tema} aumentam faturamento.",
+"O sucesso em {tema} exige ação imediata.",
+"Boas decisões em {tema} geram crescimento.",
+"A consistência em {tema} aumenta conversões.",
+"Inovar em {tema} abre novas oportunidades.",
+"O planejamento em {tema} melhora os resultados.",
+"A dedicação em {tema} gera confiança no cliente.",
+"A clareza em {tema} fortalece negociações.",
+"O domínio de {tema} aumenta o lucro.",
+"Foco em {tema} impulsiona vendas consistentes.",
+"A estratégia certa em {tema} traz crescimento.",
+"A evolução em {tema} cria novas oportunidades.",
+"A presença forte em {tema} gera autoridade.",
+"O compromisso com {tema} fortalece o negócio."
+],
+
+fitness:[
+"Disciplina em {tema} transforma o corpo.",
+"Persistência em {tema} gera evolução.",
+"Resultados em {tema} vêm com constância.",
+"Treinar {tema} melhora energia diária.",
+"Dedicação em {tema} constrói autoestima.",
+"Compromisso com {tema} muda hábitos.",
+"A superação em {tema} fortalece sua mente.",
+"A evolução em {tema} acontece com rotina.",
+"O foco em {tema} melhora sua performance.",
+"A prática diária de {tema} gera resultados.",
+"A constância em {tema} constrói resistência.",
+"A motivação em {tema} nasce da disciplina.",
+"Treinar {tema} aumenta sua confiança.",
+"A dedicação em {tema} melhora sua saúde.",
+"O progresso em {tema} depende da persistência."
+],
+
+humor:[
+"Tentando dominar {tema} desde ontem.",
+"Especialista em {tema} só na teoria.",
+"Focado em {tema} depois do café.",
+"Mais um dia sobrevivendo a {tema}.",
+"Motivação em {tema} apareceu e sumiu.",
+"Tentativa número 52 em {tema}.",
+"Hoje vai dar certo em {tema}, eu acho.",
+"Planejando sucesso em {tema} sem sair do lugar.",
+"Quase entendendo tudo sobre {tema}.",
+"Só observando o caos de {tema}.",
+"Vivendo intensamente os desafios de {tema}.",
+"Prometi focar em {tema}… amanhã começo.",
+"Fazendo cara de especialista em {tema}.",
+"Mais perdido em {tema} que sinal ruim.",
+"Só progresso lento em {tema} hoje."
+],
+
+empresarial:[
+"Estratégia em {tema} gera crescimento sustentável.",
+"Gestão eficiente em {tema} melhora resultados.",
+"Inovação em {tema} cria vantagem competitiva.",
+"Planejamento em {tema} fortalece empresas.",
+"Decisões em {tema} definem o futuro.",
+"Excelência em {tema} constrói autoridade.",
+"A visão estratégica em {tema} amplia resultados.",
+"O foco em {tema} fortalece a organização.",
+"A evolução em {tema} aumenta competitividade.",
+"A liderança em {tema} inspira equipes.",
+"A dedicação em {tema} constrói reputação.",
+"O compromisso com {tema} gera crescimento sólido.",
+"A constância em {tema} melhora performance.",
+"A gestão inteligente de {tema} reduz riscos.",
+"A inovação em {tema} cria novas possibilidades."
+],
+
+marketing:[
+"Autoridade em {tema} se constrói com constância.",
+"Resultados em {tema} vêm de testes contínuos.",
+"Planejamento em {tema} melhora desempenho.",
+"Visibilidade em {tema} aumenta oportunidades.",
+"Inovação em {tema} fortalece marcas.",
+"Conteúdo em {tema} gera engajamento.",
+"A criatividade em {tema} atrai novos clientes.",
+"A estratégia digital em {tema} amplia alcance.",
+"A consistência em {tema} gera reconhecimento.",
+"O foco em {tema} melhora campanhas.",
+"A análise de {tema} orienta decisões.",
+"A evolução em {tema} fortalece posicionamento.",
+"O investimento em {tema} gera crescimento.",
+"A dedicação em {tema} aumenta autoridade.",
+"A presença ativa em {tema} gera resultados."
+],
+
+estudos:[
+"Disciplina nos estudos de {tema} traz resultados.",
+"A prática em {tema} melhora compreensão.",
+"Persistir em {tema} fortalece o aprendizado.",
+"Organização em {tema} aumenta produtividade.",
+"A constância em {tema} gera evolução.",
+"O esforço em {tema} constrói conhecimento.",
+"A dedicação em {tema} melhora desempenho acadêmico.",
+"O foco em {tema} reduz distrações.",
+"A revisão de {tema} fortalece a memória.",
+"O hábito de estudar {tema} gera progresso.",
+"A evolução em {tema} depende da rotina.",
+"A prática constante de {tema} traz confiança.",
+"O compromisso com {tema} cria oportunidades.",
+"A organização do tempo em {tema} melhora resultados.",
+"A persistência em {tema} supera dificuldades."
+],
+
+financas:[
+"O controle de {tema} traz estabilidade.",
+"Planejar {tema} evita dificuldades futuras.",
+"A disciplina em {tema} gera segurança.",
+"Organizar {tema} melhora decisões.",
+"A constância em {tema} constrói patrimônio.",
+"O foco em {tema} reduz riscos.",
+"A consciência sobre {tema} melhora sua vida financeira.",
+"A estratégia em {tema} aumenta seus ganhos.",
+"O planejamento em {tema} traz tranquilidade.",
+"A dedicação a {tema} gera liberdade financeira.",
+"A organização de {tema} evita prejuízos.",
+"O conhecimento em {tema} fortalece escolhas.",
+"A evolução em {tema} cria estabilidade.",
+"A atenção aos detalhes em {tema} melhora resultados.",
+"O compromisso com {tema} gera prosperidade."
+],
+
+produtividade:[
+"Organização em {tema} melhora desempenho.",
+"O foco em {tema} aumenta eficiência.",
+"A disciplina em {tema} reduz atrasos.",
+"A constância em {tema} gera resultados.",
+"Planejar {tema} otimiza tempo.",
+"A dedicação diária a {tema} constrói sucesso.",
+"A clareza em {tema} facilita decisões.",
+"A prática constante em {tema} melhora rendimento.",
+"A evolução em {tema} depende de hábitos positivos.",
+"O compromisso com {tema} aumenta performance.",
+"A rotina focada em {tema} gera progresso.",
+"A persistência em {tema} constrói excelência.",
+"O equilíbrio em {tema} evita sobrecarga.",
+"A atenção em {tema} reduz erros.",
+"A melhoria contínua em {tema} gera destaque."
+],
+
+desenvolvimento:[
+"O crescimento em {tema} começa pela mentalidade.",
+"A dedicação a {tema} fortalece o caráter.",
+"A evolução em {tema} exige constância.",
+"A prática de {tema} melhora a confiança.",
+"O foco em {tema} gera transformação.",
+"A persistência em {tema} desenvolve resiliência.",
+"A consciência sobre {tema} amplia perspectivas.",
+"A jornada em {tema} fortalece sua identidade.",
+"A reflexão sobre {tema} gera aprendizado.",
+"A dedicação em {tema} inspira evolução.",
+"O autoconhecimento em {tema} transforma atitudes.",
+"A constância em {tema} constrói maturidade.",
+"O compromisso com {tema} gera propósito.",
+"A evolução pessoal em {tema} cria oportunidades.",
+"A disciplina em {tema} molda seu futuro."
+]
+}
+
+function gerar(){
+
+let tema=document.getElementById("tema").value.trim()
+let tipo=document.getElementById("tipo").value
+
+if(!tema){
+alert("Digite um tema")
+return
+}
+
+document.getElementById("loader").style.display="block"
+document.getElementById("resultado").innerHTML=""
+
+setTimeout(()=>{
+
+let frases=banco[tipo]
+
+if(!historico[tipo]) historico[tipo]=[]
+
+legendasGeradas=[]
+
+for(let i=0;i<3;i++){
+
+let disponiveis=frases.filter(f=>!historico[tipo].includes(f))
+
+if(disponiveis.length===0){
+historico[tipo]=[]
+disponiveis=frases
+}
+
+let sorteio=Math.floor(Math.random()*disponiveis.length)
+let base=disponiveis[sorteio]
+
+let frase=base.replaceAll("{tema}",tema)
+
+legendasGeradas.push(frase)
+historico[tipo].push(base)
+
+}
+
+let html=""
+
+legendasGeradas.forEach((f,i)=>{
+html+=(i+1)+". "+f+"<br><br>"
+})
+
+document.getElementById("loader").style.display="none"
+document.getElementById("resultado").innerHTML=html
+
+},700)
+
+}
+
+function copiar(){
+
+if(legendasGeradas.length===0){
+alert("Gere legendas primeiro")
+return
+}
+
+navigator.clipboard.writeText(legendasGeradas.join("\n\n"))
+alert("Copiado")
+
+}
+
+</script>
+
+</body>
+</html>
